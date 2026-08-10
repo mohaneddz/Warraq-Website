@@ -1,6 +1,44 @@
+import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
-import { getBookById } from "@/lib/catalog";
+import { Footer } from "@/components/Footer";
+import { BookCover } from "@/components/BookCover";
+import { authorsOf, availabilityOf, getBookById } from "@/lib/catalog";
+import { externalLinksFor } from "@/lib/external";
+
+export const revalidate = 300;
+
+const TYPE_LABEL: Record<string, string> = {
+  book: "Book",
+  fyp: "Final-year project",
+  journal: "Journal",
+  other: "Other",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  available: "Available",
+  "on-loan": "On loan",
+  reserved: "Reserved",
+  repair: "In repair",
+  lost: "Lost",
+  archived: "Archived",
+};
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const book = await getBookById(id);
+  if (!book) return { title: "Not found" };
+  const authors = authorsOf(book);
+  return {
+    title: book.title,
+    description: authors ? `${book.title} — ${authors}` : book.title,
+  };
+}
 
 export default async function BookDetailPage({
   params,
@@ -11,75 +49,184 @@ export default async function BookDetailPage({
   const book = await getBookById(id);
   if (!book) notFound();
 
-  const authors = book.book_authors.map((ba) => ba.authors.name).join(", ");
-  const available = book.copies.filter((c) => c.status === "available").length;
+  const authors = authorsOf(book);
+  const { total, available } = availabilityOf(book);
+  const links = externalLinksFor(book);
+
+  const statusCounts = book.copies.reduce<Record<string, number>>((acc, c) => {
+    acc[c.status] = (acc[c.status] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  const tags = (book.tags ?? "")
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
 
   return (
     <>
       <Header />
-      <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-10">
-        <div className="flex flex-col gap-8 sm:flex-row">
-          <div className="flex aspect-[3/4] w-full max-w-[220px] shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-black/10 bg-white shadow-card">
-            {book.cover_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={book.cover_url} alt={book.title} className="h-full w-full object-cover" />
-            ) : (
-              <span className="px-4 text-center font-display text-sm font-semibold text-ink/30">
-                {book.title}
-              </span>
-            )}
+
+      <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
+        <Link
+          href="/catalog"
+          className="inline-block text-[13px] font-semibold text-muted transition-colors hover:text-emerald"
+        >
+          ← Back to catalogue
+        </Link>
+
+        <div className="mt-6 grid gap-10 md:grid-cols-[260px_1fr]">
+          {/* Cover + availability */}
+          <div className="space-y-4">
+            <BookCover
+              title={book.title}
+              author={authors}
+              coverUrl={book.cover_url}
+              seed={book.id}
+              size="detail"
+              className="aspect-3/4 w-full overflow-hidden rounded-2xl border border-line shadow-lift"
+            />
+
+            <div className="rounded-2xl border border-line bg-surface p-4">
+              <p className="font-display text-[16px] font-semibold">
+                {total === 0
+                  ? "No copies on record"
+                  : available > 0
+                    ? `${available} of ${total} available`
+                    : "All copies on loan"}
+              </p>
+
+              {total > 0 && (
+                <ul className="mt-3 space-y-1.5">
+                  {Object.entries(statusCounts).map(([status, count]) => (
+                    <li key={status} className="flex items-center justify-between text-[12.5px]">
+                      <span className="text-muted">{STATUS_LABEL[status] ?? status}</span>
+                      <span className="font-semibold">{count}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <p className="mt-4 border-t border-line pt-3 text-[12px] leading-relaxed text-faint">
+                Consultation and borrowing are handled at the library desk — this catalogue is
+                for reference only.
+              </p>
+            </div>
           </div>
 
-          <div className="flex-1">
-            <span className="text-[11px] font-bold uppercase tracking-wide text-copper">
-              {book.item_type}
+          {/* Details */}
+          <div className="min-w-0">
+            <span className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-copper">
+              {TYPE_LABEL[book.item_type] ?? book.item_type}
             </span>
-            <h1 className="font-display text-2xl font-bold text-ink">{book.title}</h1>
+
+            <h1
+              className="mt-1 font-display text-[30px] font-semibold leading-[1.15] tracking-tight"
+              style={{ textWrap: "balance" }}
+            >
+              {book.title}
+            </h1>
+
+            {book.subtitle && (
+              <p className="mt-2 font-display text-[17px] text-muted">{book.subtitle}</p>
+            )}
+
             {book.arabic_title && (
-              <p dir="rtl" className="mt-1 text-[16px] text-ink/70">
+              <p dir="rtl" lang="ar" className="mt-2 font-display text-[19px] text-muted">
                 {book.arabic_title}
               </p>
             )}
-            {book.subtitle && <p className="mt-1 text-[14px] text-ink/60">{book.subtitle}</p>}
-            {authors && <p className="mt-3 text-[14px] font-semibold text-ink/80">{authors}</p>}
 
-            <div className="mt-6 grid grid-cols-2 gap-3 text-[13px]">
-              <Field label="Category" value={book.categories?.name} />
-              <Field label="Publisher" value={book.publishers?.name} />
-              <Field label="Year" value={book.publication_year?.toString()} />
-              <Field label="Language" value={book.language} />
-              <Field label="ISBN" value={book.isbn13} />
-              <Field label="Call number" value={book.call_number ?? book.dewey_code} />
-            </div>
-
-            <div className="mt-6 rounded-xl border border-black/10 bg-white p-4">
-              <p className={available > 0 ? "font-semibold text-emerald" : "font-semibold text-ink/50"}>
-                {book.copies.length === 0
-                  ? "No copies on record"
-                  : available > 0
-                    ? `${available} of ${book.copies.length} cop${book.copies.length === 1 ? "y" : "ies"} available`
-                    : "All copies currently on loan"}
-              </p>
-            </div>
+            {authors && <p className="mt-4 text-[15px] font-semibold">{authors}</p>}
 
             {book.description && (
-              <p className="mt-6 whitespace-pre-line text-[14px] leading-relaxed text-ink/70">
+              <p className="mt-6 whitespace-pre-line text-[14.5px] leading-relaxed text-muted">
                 {book.description}
               </p>
             )}
+
+            <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-line pt-6 sm:grid-cols-3">
+              <Field label="Subject" value={book.categories?.name} />
+              <Field label="Publisher" value={book.publishers?.name} />
+              <Field label="Year" value={book.publication_year?.toString()} />
+              <Field label="Language" value={book.language} />
+              <Field label="Edition" value={book.edition} />
+              <Field label="Pages" value={book.page_count?.toString()} />
+              <Field label="Call number" value={book.call_number} mono />
+              <Field label="Dewey" value={book.dewey_code} mono />
+              <Field label="ISBN" value={book.isbn13 ?? book.isbn10} mono />
+            </dl>
+
+            {tags.length > 0 && (
+              <div className="mt-6 flex flex-wrap gap-1.5">
+                {tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full bg-sunken px-2.5 py-1 text-[11.5px] font-semibold text-muted"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Look this title up elsewhere */}
+            <section className="mt-10 border-t border-line pt-6">
+              <h2 className="font-display text-[18px] font-semibold">Find this book elsewhere</h2>
+              <p className="mt-1 text-[13px] text-muted">
+                Search other catalogues and booksellers for editions, previews, and full records.
+              </p>
+
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                {links.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-3 transition-colors hover:border-emerald hover:bg-emerald-soft"
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-[13.5px] font-semibold transition-colors group-hover:text-emerald">
+                        {link.label}
+                      </span>
+                      <span className="block truncate text-[11.5px] text-faint">{link.note}</span>
+                    </span>
+                    <span
+                      aria-hidden
+                      className="shrink-0 text-[13px] text-faint transition-colors group-hover:text-emerald"
+                    >
+                      ↗
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </section>
           </div>
         </div>
       </main>
+
+      <Footer />
     </>
   );
 }
 
-function Field({ label, value }: { label: string; value?: string | null }) {
+function Field({
+  label,
+  value,
+  mono,
+}: {
+  label: string;
+  value?: string | null;
+  mono?: boolean;
+}) {
   if (!value) return null;
   return (
-    <div>
-      <div className="text-[11px] font-bold uppercase tracking-wide text-ink/40">{label}</div>
-      <div className="font-semibold text-ink">{value}</div>
+    <div className="min-w-0">
+      <dt className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-faint">{label}</dt>
+      <dd className={`mt-0.5 break-words text-[13.5px] font-semibold ${mono ? "font-mono text-[12.5px]" : ""}`}>
+        {value}
+      </dd>
     </div>
   );
 }

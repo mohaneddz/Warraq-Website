@@ -1,34 +1,134 @@
 @import "tailwindcss";
 
-@theme {
-  --color-ink: #122222;
-  --color-emerald: #1a4d40;
-  --color-emerald-light: #1b9277;
-  --color-parchment: #f9f8f4;
-  --color-copper: #b96f3e;
-  --font-display: "Manrope", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
-}
-
+/* ── Design tokens ───────────────────────────────────────────────
+   Declared as plain CSS variables so a single `prefers-color-scheme`
+   block re-themes the whole site, then surfaced to Tailwind through
+   `@theme inline` (which keeps utilities pointing at the live var
+   rather than baking in the light value at build time). */
 :root {
-  --background: #f9f8f4;
-  --foreground: #122222;
+  --bg: #faf8f3;
+  --surface: #ffffff;
+  --surface-sunken: #f3f0e8;
+  --line: rgba(18, 34, 34, 0.1);
+  --line-strong: rgba(18, 34, 34, 0.18);
+  --fg: #122222;
+  --muted: rgba(18, 34, 34, 0.6);
+  --faint: rgba(18, 34, 34, 0.42);
+  --emerald: #1a4d40;
+  --emerald-hover: #164035;
+  --emerald-soft: #ecf2ef;
+  --copper: #b96f3e;
+  --shadow-card: 0 1px 2px rgba(18, 34, 34, 0.04), 0 8px 24px rgba(18, 34, 34, 0.06);
+  --shadow-lift: 0 2px 4px rgba(18, 34, 34, 0.06), 0 16px 40px rgba(18, 34, 34, 0.12);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #111d1a;
-    --foreground: #f9f8f4;
+    --bg: #0f1917;
+    --surface: #16221f;
+    --surface-sunken: #111c19;
+    --line: rgba(249, 248, 244, 0.1);
+    --line-strong: rgba(249, 248, 244, 0.2);
+    --fg: #f2f1ec;
+    --muted: rgba(242, 241, 236, 0.62);
+    --faint: rgba(242, 241, 236, 0.42);
+    --emerald: #2f9b7f;
+    --emerald-hover: #38b092;
+    --emerald-soft: rgba(47, 155, 127, 0.14);
+    --copper: #cf8a58;
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.28);
+    --shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.35), 0 16px 40px rgba(0, 0, 0, 0.45);
   }
 }
 
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-sunken: var(--surface-sunken);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-emerald: var(--emerald);
+  --color-emerald-hover: var(--emerald-hover);
+  --color-emerald-soft: var(--emerald-soft);
+  --color-copper: var(--copper);
+
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 ::selection {
-  background-color: rgba(185, 111, 62, 0.2);
-  color: #122222;
+  background-color: color-mix(in srgb, var(--copper) 26%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--copper);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.shadow-card {
+  box-shadow: var(--shadow-card);
+}
+.shadow-lift {
+  box-shadow: var(--shadow-lift);
+}
+
+/* Grain lifts the large flat parchment fields out of feeling like plain #fff. */
+.grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+@media (prefers-color-scheme: dark) {
+  .grain::before {
+    mix-blend-mode: overlay;
+    opacity: 0.22;
+  }
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

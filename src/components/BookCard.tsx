@@ -1,55 +1,63 @@
 import Link from "next/link";
-import type { CatalogBook } from "@/lib/catalog";
+import { BookCover } from "./BookCover";
+import { authorsOf, availabilityOf, type CatalogBook } from "@/lib/catalog";
 
-function availability(copies: { status: string }[]) {
-  const available = copies.filter((c) => c.status === "available").length;
-  return { available, total: copies.length };
-}
+const TYPE_LABEL: Record<string, string> = {
+  book: "Book",
+  fyp: "Final-year project",
+  journal: "Journal",
+  other: "Other",
+};
 
 export function BookCard({ book }: { book: CatalogBook }) {
-  const authors = book.book_authors.map((ba) => ba.authors.name).join(", ");
-  const { available, total } = availability(book.copies);
+  const authors = authorsOf(book);
+  const { total, available } = availabilityOf(book);
 
   return (
     <Link
       href={`/catalog/${book.id}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-black/10 bg-white shadow-card transition-transform hover:-translate-y-0.5 hover:shadow-lg"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-card transition-all duration-200 hover:-translate-y-1 hover:border-line-strong hover:shadow-lift"
     >
-      <div className="flex aspect-[3/4] items-center justify-center bg-parchment">
-        {book.cover_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={book.cover_url}
-            alt={book.title}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <span className="px-4 text-center font-display text-sm font-semibold text-ink/30">
-            {book.title}
-          </span>
-        )}
-      </div>
-      <div className="flex flex-1 flex-col gap-1 p-4">
-        <span className="text-[11px] font-bold uppercase tracking-wide text-copper">
-          {book.item_type}
+      <BookCover
+        title={book.title}
+        author={authors}
+        coverUrl={book.cover_url}
+        seed={book.id}
+        className="aspect-3/4 w-full"
+      />
+
+      <div className="flex flex-1 flex-col gap-1.5 p-4">
+        <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-copper">
+          {TYPE_LABEL[book.item_type] ?? book.item_type}
         </span>
-        <h3 className="line-clamp-2 font-display text-[15px] font-bold text-ink group-hover:text-emerald">
+
+        <h3 className="line-clamp-2 font-display text-[15px] font-semibold leading-snug transition-colors group-hover:text-emerald">
           {book.title}
         </h3>
-        {authors && <p className="line-clamp-1 text-[13px] text-ink/60">{authors}</p>}
-        <div className="mt-auto flex items-center justify-between pt-2 text-[12px]">
-          <span className="text-ink/50">{book.publication_year ?? "—"}</span>
-          <span
-            className={
-              available > 0
-                ? "font-semibold text-emerald"
-                : "font-semibold text-ink/40"
-            }
-          >
-            {total === 0 ? "No copies" : available > 0 ? `${available} available` : "On loan"}
-          </span>
+
+        {authors && <p className="line-clamp-1 text-[12.5px] text-muted">{authors}</p>}
+
+        <div className="mt-auto flex items-center justify-between pt-3 text-[11.5px] font-semibold">
+          <span className="text-faint">{book.publication_year ?? "—"}</span>
+          <AvailabilityPill total={total} available={available} />
         </div>
       </div>
     </Link>
+  );
+}
+
+export function AvailabilityPill({ total, available }: { total: number; available: number }) {
+  if (total === 0) return <span className="text-faint">No copies</span>;
+
+  const on = available > 0;
+  return (
+    <span className={`inline-flex items-center gap-1.5 ${on ? "text-emerald" : "text-faint"}`}>
+      <span
+        aria-hidden
+        className="h-1.5 w-1.5 rounded-full"
+        style={{ background: on ? "var(--emerald)" : "var(--faint)" }}
+      />
+      {on ? `${available} available` : "All on loan"}
+    </span>
   );
 }
