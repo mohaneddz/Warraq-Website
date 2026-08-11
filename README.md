@@ -4,6 +4,8 @@ Public-facing Next.js site for the Mustapha Bacha Hospital library. Read-only br
 over the same Supabase database the [Warraq desktop app](../App) uses, via the `anon` role
 and the `catalog_*_public_read` RLS policies defined in `App/supabase/migrations/0004_rls.sql`.
 
+**Status:** Landing page plus catalog browse/search with external lookup links are functional, following a recent catalogue UI redesign.
+
 ## Tech
 
 Next.js (App Router) · TypeScript · Tailwind CSS · `@supabase/supabase-js`
