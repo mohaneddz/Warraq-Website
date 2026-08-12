@@ -1,5 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ThemeToggle } from "./ThemeToggle";
+import { LanguageSelect } from "./LanguageSelect";
 
 export function Header() {
   return (
@@ -29,6 +31,9 @@ export function Header() {
           >
             Catalogue
           </Link>
+          <span className="mx-1 hidden h-5 w-px bg-line sm:block" />
+          <LanguageSelect />
+          <ThemeToggle />
         </nav>
       </div>
     </header>

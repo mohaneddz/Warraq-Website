@@ -27,9 +27,16 @@ export const metadata: Metadata = {
   icons: { icon: "/brand/warraq-symbol.png" },
 };
 
+// Runs before first paint: applies the saved theme so there's no light→dark flash. When nothing
+// is stored, data-theme stays unset and the CSS falls back to the OS `prefers-color-scheme`.
+const themeScript = `(function(){try{var t=localStorage.getItem('warraq-site-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${manrope.variable} ${fraunces.variable} h-full`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="flex min-h-full flex-col bg-bg text-fg">{children}</body>
     </html>
   );
