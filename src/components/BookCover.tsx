@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 
 /* Most of this collection is 1950s–90s French medical monographs, which the public
@@ -43,14 +44,27 @@ export function BookCover({ title, author, coverUrl, seed, size = "card", classN
   if (showImage) {
     return (
       <div className={`relative overflow-hidden bg-sunken ${className}`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        {/* Routed through Next's image optimizer (see next.config.ts remotePatterns) so
+            the browser gets a long-lived, immutable response from our own domain instead
+            of re-fetching from Open Library / Google Books on every render — that
+            external round-trip, with their own short cache lifetimes, is what caused
+            covers to visibly reload while browsing. */}
+        <Image
           src={coverUrl}
           alt={`Cover of ${title}`}
-          loading="lazy"
-          referrerPolicy="no-referrer"
+          fill
+          sizes={
+            size === "detail"
+              ? "260px"
+              : "(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw"
+          }
+          // Detail pages show a single cover above the fold — it's the page's LCP
+          // element, so it should preload eagerly rather than wait on an intersection
+          // trigger. Grid thumbnails stay lazy since dozens render per page.
+          priority={size === "detail"}
+          loading={size === "detail" ? undefined : "lazy"}
           onError={() => setFailed(true)}
-          className="h-full w-full object-cover"
+          className="object-cover"
         />
       </div>
     );
