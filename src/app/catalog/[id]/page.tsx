@@ -34,10 +34,30 @@ export async function generateMetadata({
   const book = await getBookById(id);
   if (!book) return { title: "Not found" };
   const authors = authorsOf(book);
+  const description = authors ? `${book.title} by ${authors}` : book.title;
   return {
     title: book.title,
-    description: authors ? `${book.title} — ${authors}` : book.title,
+    description,
+    alternates: { canonical: `/catalog/${id}` },
+    openGraph: {
+      title: book.title,
+      description,
+      type: "book",
+      isbn: book.isbn13 ?? book.isbn10 ?? undefined,
+      images: book.cover_url ? [book.cover_url] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: book.title,
+      description,
+    },
   };
+}
+
+/** Escapes `</` so a book field containing literal script-closing text can't break out
+ *  of the inline JSON-LD <script> tag it's embedded in. */
+function jsonLd(data: unknown) {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
 }
 
 export default async function BookDetailPage({
@@ -63,8 +83,29 @@ export default async function BookDetailPage({
     .map((t) => t.trim())
     .filter(Boolean);
 
+  const bookLd = {
+    "@context": "https://schema.org",
+    "@type": "Book",
+    name: book.title,
+    ...(authors && { author: { "@type": "Person", name: authors } }),
+    ...(book.description && { description: book.description }),
+    ...(book.isbn13 || book.isbn10
+      ? { isbn: book.isbn13 ?? book.isbn10 }
+      : {}),
+    ...(book.publication_year && { datePublished: String(book.publication_year) }),
+    ...(book.publishers?.name && {
+      publisher: { "@type": "Organization", name: book.publishers.name },
+    }),
+    ...(book.language && { inLanguage: book.language }),
+    ...(book.page_count && { numberOfPages: book.page_count }),
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLd(bookLd) }}
+      />
       <Header />
 
       <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
@@ -108,7 +149,7 @@ export default async function BookDetailPage({
               )}
 
               <p className="mt-4 border-t border-line pt-3 text-[12px] leading-relaxed text-faint">
-                Consultation and borrowing are handled at the library desk — this catalogue is
+                Consultation and borrowing are handled at the library desk; this catalogue is
                 for reference only.
               </p>
             </div>

@@ -6,7 +6,11 @@ import { BookCard } from "@/components/BookCard";
 import { SearchBar } from "@/components/SearchBar";
 import { getCategories, searchCatalog } from "@/lib/catalog";
 
-export const metadata: Metadata = { title: "Catalogue" };
+export const metadata: Metadata = {
+  title: "Catalogue",
+  description:
+    "Browse the full Warraq catalogue: books, final-year projects, and journals held by the Mustapha Bacha Hospital library, with live availability.",
+};
 
 const PAGE_SIZE = 24;
 
@@ -165,7 +169,7 @@ function EmptyState() {
     <div className="mt-8 rounded-2xl border border-dashed border-line-strong px-6 py-20 text-center">
       <p className="font-display text-[20px] font-semibold">No titles matched</p>
       <p className="mx-auto mt-2 max-w-sm text-[14px] text-muted">
-        Try a shorter phrase, or search by author surname — many records use abbreviated
+        Try a shorter phrase, or search by author surname: many records use abbreviated
         or French-language titles.
       </p>
       <Link
