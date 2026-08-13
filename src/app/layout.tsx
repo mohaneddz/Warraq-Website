@@ -1,6 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Manrope } from "next/font/google";
 import "./globals.css";
+
+const SITE_URL = "https://warraq-website.vercel.app";
+const SITE_TITLE = "Warraq · Library Catalogue";
+const SITE_DESCRIPTION =
+  "Search the Mustapha Bacha Hospital library: books, final-year projects, and journals, with live availability.";
 
 // latin-ext is required, not optional: the catalogue is largely French and Spanish
 // ("Précis de pathologie médicale", "Acta Oto-Rino-Laringológica") and without it
@@ -18,13 +23,35 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "Warraq — Library Catalogue",
+    default: SITE_TITLE,
     template: "%s · Warraq",
   },
-  description:
-    "Search the Mustapha Bacha Hospital library: books, final-year projects, and journals, with live availability.",
-  icons: { icon: "/brand/warraq-symbol.png" },
+  description: SITE_DESCRIPTION,
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    siteName: "Warraq",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#faf8f3" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f1917" },
+  ],
 };
 
 // Runs before first paint: applies the saved theme so there's no light→dark flash. When nothing
