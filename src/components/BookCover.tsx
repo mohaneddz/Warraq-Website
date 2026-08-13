@@ -76,7 +76,7 @@ export function BookCover({ title, author, coverUrl, seed, size = "card", classN
   return (
     <div
       role="img"
-      aria-label={`${title} — no cover image available`}
+      aria-label={`${title}: no cover image available`}
       className={`relative flex flex-col justify-between overflow-hidden ${className}`}
       style={{ background: `linear-gradient(150deg, ${theme.from}, ${theme.to})`, color: theme.ink }}
     >

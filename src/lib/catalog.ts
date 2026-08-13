@@ -157,3 +157,14 @@ export async function getCatalogStats() {
     authorCount: authors.count ?? 0,
   };
 }
+
+/** IDs of every public book, for the sitemap. */
+export async function getAllBookIds() {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("books")
+    .select("id")
+    .is("archived_at", null);
+  if (error) throw error;
+  return (data ?? []) as { id: string }[];
+}
