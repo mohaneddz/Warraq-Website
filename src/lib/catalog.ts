@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { getSupabase } from "./supabase";
 
 export type CatalogBook = {
   id: string;
@@ -63,6 +63,7 @@ export async function searchCatalog({
   sort = "title",
 }: CatalogSearchParams) {
   const from = (page - 1) * pageSize;
+  const supabase = getSupabase();
 
   let request = supabase
     .from("books")
@@ -101,6 +102,7 @@ export async function searchCatalog({
 }
 
 export async function getBookById(id: string) {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("books")
     .select(CATALOG_SELECT)
@@ -112,6 +114,7 @@ export async function getBookById(id: string) {
 }
 
 export async function getCategories() {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("categories")
     .select("id, name")
@@ -123,6 +126,7 @@ export async function getCategories() {
 /** Subject list for the landing page, counted in one pass rather than one query per
  *  category — the whole table is only a few hundred rows. */
 export async function getSubjects(limit = 12) {
+  const supabase = getSupabase();
   const [{ data: books }, { data: categories }] = await Promise.all([
     supabase.from("books").select("category_id").is("archived_at", null),
     supabase.from("categories").select("id, name"),
@@ -141,6 +145,7 @@ export async function getSubjects(limit = 12) {
 }
 
 export async function getCatalogStats() {
+  const supabase = getSupabase();
   const [books, copies, authors] = await Promise.all([
     supabase.from("books").select("id", { count: "exact", head: true }).is("archived_at", null),
     supabase.from("copies").select("id", { count: "exact", head: true }),
