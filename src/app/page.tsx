@@ -7,6 +7,15 @@ import { getCatalogStats, getSubjects, searchCatalog } from "@/lib/catalog";
 
 export const revalidate = 300;
 
+const libraryLd = {
+  "@context": "https://schema.org",
+  "@type": "Library",
+  name: "Warraq · Mustapha Bacha Hospital Library",
+  description:
+    "Public catalogue for the Mustapha Bacha Hospital library: books, final-year projects, and journals, with live availability.",
+  url: "https://warraq-website.vercel.app",
+};
+
 export default async function Home() {
   const [stats, subjects, { books }] = await Promise.all([
     getCatalogStats(),
@@ -16,6 +25,10 @@ export default async function Home() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(libraryLd) }}
+      />
       <Header />
 
       <main className="flex-1">
@@ -35,7 +48,7 @@ export default async function Home() {
             </h1>
 
             <p className="max-w-lg text-[16px] leading-relaxed text-muted" style={{ textWrap: "pretty" }}>
-              Every book, journal, and final-year project held by the library — with live
+              Every book, journal, and final-year project held by the library, with live
               availability drawn from the same records the front desk uses.
             </p>
 
