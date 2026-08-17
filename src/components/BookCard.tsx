@@ -4,7 +4,7 @@ import { authorsOf, availabilityOf, type CatalogBook } from "@/lib/catalog";
 
 const TYPE_LABEL: Record<string, string> = {
   book: "Book",
-  fyp: "Final-year project",
+  fyp: "PFE",
   journal: "Journal",
   other: "Other",
 };

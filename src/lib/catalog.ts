@@ -123,9 +123,10 @@ export async function getCategories() {
   return data ?? [];
 }
 
-/** Subject list for the landing page, counted in one pass rather than one query per
- *  category — the whole table is only a few hundred rows. */
-export async function getSubjects(limit = 12) {
+/** Subject list for the landing page and the catalogue's subject filter, counted in one
+ *  pass rather than one query per category — the whole table is only a few hundred rows.
+ *  Subjects with zero books are dropped rather than shown as a dead filter option. */
+export async function getSubjects(limit = Infinity) {
   const supabase = getSupabase();
   const [{ data: books }, { data: categories }] = await Promise.all([
     supabase.from("books").select("category_id").is("archived_at", null),
@@ -142,6 +143,41 @@ export async function getSubjects(limit = 12) {
     .filter((c) => c.count > 0)
     .sort((a, b) => b.count - a.count)
     .slice(0, limit);
+}
+
+export const ITEM_TYPE_LABELS: Record<string, string> = {
+  book: "Books",
+  fyp: "Final-year projects (PFE)",
+  journal: "Journals",
+  other: "Other",
+};
+
+// Fixed order rather than sorted by count: these are a closed, meaningful set of
+// categories (not organic subjects), so "Books, FYPs, Journals, Other" should read
+// the same regardless of which one currently has the most records.
+const ITEM_TYPE_ORDER = ["book", "fyp", "journal", "other"] as const;
+
+/** Item-type counts for the catalogue's type filter and the homepage's "browse by
+ *  type" section. A type with zero books is omitted rather than offered as a filter
+ *  or section that would only ever lead to an empty result. */
+export async function getItemTypeCounts() {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("books")
+    .select("item_type")
+    .is("archived_at", null);
+  if (error) throw error;
+
+  const counts = new Map<string, number>();
+  for (const b of data ?? []) {
+    counts.set(b.item_type, (counts.get(b.item_type) ?? 0) + 1);
+  }
+
+  return ITEM_TYPE_ORDER.filter((type) => (counts.get(type) ?? 0) > 0).map((type) => ({
+    value: type,
+    label: ITEM_TYPE_LABELS[type],
+    count: counts.get(type) ?? 0,
+  }));
 }
 
 export async function getCatalogStats() {

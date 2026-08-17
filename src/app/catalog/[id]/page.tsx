@@ -11,7 +11,7 @@ export const revalidate = 300;
 
 const TYPE_LABEL: Record<string, string> = {
   book: "Book",
-  fyp: "Final-year project",
+  fyp: "Final-year project (PFE)",
   journal: "Journal",
   other: "Other",
 };

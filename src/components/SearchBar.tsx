@@ -1,21 +1,18 @@
 /* A plain GET form pointed at /catalog — no client JS, no router calls. The browser
    serialises the fields straight into the query string the catalogue page already reads,
    so search keeps working for anyone with scripting disabled and every result set stays
-   a shareable, bookmarkable URL. Omitting `page` means a new search resets to page 1. */
+   a shareable, bookmarkable URL. Omitting `page` means a new search resets to page 1.
+   The type pills below are native radios styled with peer-checked, not buttons + state,
+   so the "no client JS" property holds for them too. */
+
+type ItemTypeOption = { value: string; label: string; count: number };
 
 type Props = {
-  categories?: { id: string; name: string }[];
+  categories?: { name: string; count: number }[];
+  itemTypes?: ItemTypeOption[];
   defaults?: { q?: string; itemType?: string; category?: string; sort?: string };
   variant?: "hero" | "full";
 };
-
-const ITEM_TYPES = [
-  { value: "", label: "All types" },
-  { value: "book", label: "Books" },
-  { value: "fyp", label: "Final-year projects" },
-  { value: "journal", label: "Journals" },
-  { value: "other", label: "Other" },
-];
 
 const SORTS = [
   { value: "title", label: "Title A–Z" },
@@ -26,8 +23,9 @@ const SORTS = [
 const selectClass =
   "h-11 rounded-xl border border-line bg-surface px-3 text-[13px] font-semibold text-fg outline-none transition-colors hover:border-line-strong focus:border-emerald";
 
-export function SearchBar({ categories = [], defaults = {}, variant = "full" }: Props) {
+export function SearchBar({ categories = [], itemTypes = [], defaults = {}, variant = "full" }: Props) {
   const hero = variant === "hero";
+  const selectedType = defaults.itemType ?? "";
 
   return (
     <form action="/catalog" className={hero ? "w-full max-w-xl" : "space-y-3"}>
@@ -52,34 +50,79 @@ export function SearchBar({ categories = [], defaults = {}, variant = "full" }: 
       </div>
 
       {!hero && (
-        <div className="flex flex-wrap gap-2">
-          <select name="itemType" defaultValue={defaults.itemType ?? ""} aria-label="Item type" className={selectClass}>
-            {ITEM_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
-          </select>
+        <>
+          {/* Type is the primary way this collection gets browsed once it holds more
+              than one kind of document, so it gets its own pill row rather than being
+              buried in a dropdown with subject/sort. Only types that actually have
+              records render — a "PFE" pill that always leads to zero results is worse
+              than no pill. */}
+          {itemTypes.length > 0 && (
+            <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Item type">
+              <TypePill name="itemType" value="" label="All types" checked={selectedType === ""} />
+              {itemTypes.map((t) => (
+                <TypePill
+                  key={t.value}
+                  name="itemType"
+                  value={t.value}
+                  label={t.label}
+                  count={t.count}
+                  checked={selectedType === t.value}
+                />
+              ))}
+            </div>
+          )}
 
-          <select name="category" defaultValue={defaults.category ?? ""} aria-label="Subject" className={selectClass}>
-            <option value="">All subjects</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.name}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-wrap gap-2">
+            <select name="category" defaultValue={defaults.category ?? ""} aria-label="Subject" className={selectClass}>
+              <option value="">All subjects</option>
+              {categories.map((c) => (
+                <option key={c.name} value={c.name}>
+                  {c.name} ({c.count})
+                </option>
+              ))}
+            </select>
 
-          <select name="sort" defaultValue={defaults.sort ?? "title"} aria-label="Sort order" className={selectClass}>
-            {SORTS.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-        </div>
+            <select name="sort" defaultValue={defaults.sort ?? "title"} aria-label="Sort order" className={selectClass}>
+              {SORTS.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </>
       )}
     </form>
+  );
+}
+
+function TypePill({
+  name,
+  value,
+  label,
+  count,
+  checked,
+}: {
+  name: string;
+  value: string;
+  label: string;
+  count?: number;
+  checked: boolean;
+}) {
+  return (
+    <label className="group relative">
+      <input
+        type="radio"
+        name={name}
+        value={value}
+        defaultChecked={checked}
+        className="peer sr-only"
+      />
+      <span className="flex cursor-pointer items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 py-1.5 text-[12.5px] font-semibold text-muted transition-colors peer-checked:border-emerald peer-checked:bg-emerald-soft peer-checked:text-emerald peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-copper peer-focus-visible:outline-offset-2 hover:border-line-strong">
+        {label}
+        {typeof count === "number" && <span className="opacity-60">{count}</span>}
+      </span>
+    </label>
   );
 }
 

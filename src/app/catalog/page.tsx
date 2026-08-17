@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { BookCard } from "@/components/BookCard";
 import { SearchBar } from "@/components/SearchBar";
-import { getCategories, searchCatalog } from "@/lib/catalog";
+import { getItemTypeCounts, getSubjects, ITEM_TYPE_LABELS, searchCatalog } from "@/lib/catalog";
 
 export const metadata: Metadata = {
   title: "Catalogue",
@@ -22,13 +22,6 @@ type SearchParams = {
   page?: string;
 };
 
-const TYPE_LABEL: Record<string, string> = {
-  book: "Books",
-  fyp: "Final-year projects",
-  journal: "Journals",
-  other: "Other",
-};
-
 export default async function CatalogPage({
   searchParams,
 }: {
@@ -38,8 +31,9 @@ export default async function CatalogPage({
   const page = Math.max(1, Number(params.page) || 1);
   const sort = (["title", "recent", "year"] as const).find((s) => s === params.sort) ?? "title";
 
-  const [categories, { books, total }] = await Promise.all([
-    getCategories(),
+  const [categories, itemTypes, { books, total }] = await Promise.all([
+    getSubjects(),
+    getItemTypeCounts(),
     searchCatalog({
       query: params.q,
       category: params.category,
@@ -67,7 +61,7 @@ export default async function CatalogPage({
 
   const activeFilters = [
     params.q && { key: "q" as const, label: `“${params.q}”` },
-    params.itemType && { key: "itemType" as const, label: TYPE_LABEL[params.itemType] ?? params.itemType },
+    params.itemType && { key: "itemType" as const, label: ITEM_TYPE_LABELS[params.itemType] ?? params.itemType },
     params.category && { key: "category" as const, label: params.category },
   ].filter(Boolean) as { key: keyof SearchParams; label: string }[];
 
@@ -84,6 +78,7 @@ export default async function CatalogPage({
 
         <SearchBar
           categories={categories}
+          itemTypes={itemTypes}
           defaults={{ q: params.q, itemType: params.itemType, category: params.category, sort }}
         />
 

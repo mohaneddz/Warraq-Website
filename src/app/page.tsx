@@ -3,7 +3,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { BookCard } from "@/components/BookCard";
 import { SearchBar } from "@/components/SearchBar";
-import { getCatalogStats, getSubjects, searchCatalog } from "@/lib/catalog";
+import { getCatalogStats, getItemTypeCounts, getSubjects, searchCatalog } from "@/lib/catalog";
 
 export const revalidate = 300;
 
@@ -17,9 +17,10 @@ const libraryLd = {
 };
 
 export default async function Home() {
-  const [stats, subjects, { books }] = await Promise.all([
+  const [stats, subjects, itemTypes, { books }] = await Promise.all([
     getCatalogStats(),
     getSubjects(10),
+    getItemTypeCounts(),
     searchCatalog({ page: 1, pageSize: 10, sort: "recent" }),
   ]);
 
@@ -61,6 +62,33 @@ export default async function Home() {
             </dl>
           </div>
         </section>
+
+        {/* Browse by type — only worth a section once there's more than one kind of
+            document to choose between; with a single populated type it would just
+            repeat the hero stat with no useful choice attached to it. Types with zero
+            records (e.g. PFE / final-year projects, until the library catalogues any)
+            are already excluded upstream by getItemTypeCounts. */}
+        {itemTypes.length > 1 && (
+          <section className="mx-auto max-w-6xl px-6 py-16">
+            <SectionHeading title="Browse by type" />
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {itemTypes.map((t) => (
+                <Link
+                  key={t.value}
+                  href={`/catalog?itemType=${encodeURIComponent(t.value)}`}
+                  className="group rounded-2xl border border-line bg-surface p-4 shadow-card transition-colors hover:border-emerald hover:bg-emerald-soft"
+                >
+                  <span className="block font-display text-[15px] font-semibold transition-colors group-hover:text-emerald">
+                    {t.label}
+                  </span>
+                  <span className="text-[12.5px] font-semibold text-faint">
+                    {t.count.toLocaleString()} {t.count === 1 ? "title" : "titles"}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Subjects */}
         {subjects.length > 0 && (
