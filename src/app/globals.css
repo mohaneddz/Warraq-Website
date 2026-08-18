@@ -128,27 +128,16 @@ body {
   opacity: 0.22;
 }
 
-/* Google Translate injects its own banner/skiplinks — keep them from shifting the layout. */
+/* Google Translate's own widget UI is never shown (see LanguageSelect.tsx — a plain
+   <select> drives it via the googtrans cookie instead), but the top "translated by
+   Google" banner iframe and skip-link it injects are independent of that widget and
+   still appear once translation is active. Keep them from shifting the layout. */
 .goog-te-banner-frame,
 .skiptranslate iframe {
   display: none !important;
 }
 body {
   top: 0 !important;
-}
-#google_translate_element .goog-te-gadget {
-  font-size: 0;
-  color: transparent;
-}
-#google_translate_element .goog-te-gadget .goog-te-combo {
-  font-size: 13px;
-  color: var(--fg);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 6px 8px;
-  margin: 0;
-  font-family: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
 }
 
 .line-clamp-2 {
