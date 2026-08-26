@@ -1,3 +1,5 @@
+![Warraq](screenshots/cover.avif)
+
 <h1>
   <img src="public/brand/warraq-symbol.png" alt="Warraq icon" width="42" />
   Warraq — Public Catalog Website
