@@ -9,7 +9,7 @@ Public-facing Next.js site for the Mustapha Bacha Hospital library. Read-only br
 over the same Supabase database the [Warraq desktop app](../App) uses, via the `anon` role
 and the `catalog_*_public_read` RLS policies defined in `App/supabase/migrations/0004_rls.sql`.
 
-**Status:** Landing page plus catalog browse/search with external lookup links are functional, following a recent catalogue UI redesign.
+**Status:** Landing page, catalogue browse/search, item detail pages with external lookup links, a dark theme and a language selector are all working, following a recent catalogue UI redesign.
 
 ## Project identity
 
@@ -20,6 +20,23 @@ and the `catalog_*_public_read` RLS policies defined in `App/supabase/migrations
 </p>
 
 The image links to the live catalog at [warraq-website.vercel.app](https://warraq-website.vercel.app).
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="screenshots/landing.webp" alt="Landing page"/><br/><b>Landing</b><br/>Hero search, live collection counts, browse by subject and the most recently added titles.</td>
+    <td width="50%"><img src="screenshots/catalog.webp" alt="Catalogue"/><br/><b>Catalogue</b><br/>The full collection with item type pills, subject filter, sorting and per-title availability.</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="screenshots/search.webp" alt="Search results"/><br/><b>Search</b><br/>Search across titles, authors, ISBNs and call numbers, with removable filter chips.</td>
+    <td width="50%"><img src="screenshots/item.webp" alt="Item detail"/><br/><b>Item detail</b><br/>Description, classification (call number, Dewey, ISBN), copy availability and links to other catalogues.</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="screenshots/dark.webp" alt="Dark theme"/><br/><b>Dark theme</b><br/>A full dark palette, remembered per visitor.</td>
+    <td width="50%"><img src="screenshots/notFound.webp" alt="Not found page"/><br/><b>Not found</b><br/>A branded 404 that points back to the catalogue.</td>
+  </tr>
+</table>
 
 ## Tech
 
