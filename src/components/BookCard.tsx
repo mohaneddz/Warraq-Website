@@ -11,7 +11,7 @@ const TYPE_LABEL: Record<string, string> = {
 
 export function BookCard({ book }: { book: CatalogBook }) {
   const authors = authorsOf(book);
-  const { total, available } = availabilityOf(book);
+  const { total, available, unavailableLabel } = availabilityOf(book);
 
   return (
     <Link
@@ -39,14 +39,22 @@ export function BookCard({ book }: { book: CatalogBook }) {
 
         <div className="mt-auto flex items-center justify-between pt-3 text-[11.5px] font-semibold">
           <span className="text-faint">{book.publication_year ?? "—"}</span>
-          <AvailabilityPill total={total} available={available} />
+          <AvailabilityPill total={total} available={available} unavailableLabel={unavailableLabel} />
         </div>
       </div>
     </Link>
   );
 }
 
-export function AvailabilityPill({ total, available }: { total: number; available: number }) {
+export function AvailabilityPill({
+  total,
+  available,
+  unavailableLabel,
+}: {
+  total: number;
+  available: number;
+  unavailableLabel: string;
+}) {
   if (total === 0) return <span className="text-faint">No copies</span>;
 
   const on = available > 0;
@@ -57,7 +65,7 @@ export function AvailabilityPill({ total, available }: { total: number; availabl
         className="h-1.5 w-1.5 rounded-full"
         style={{ background: on ? "var(--emerald)" : "var(--faint)" }}
       />
-      {on ? `${available} available` : "All on loan"}
+      {on ? `${available} available` : unavailableLabel}
     </span>
   );
 }
