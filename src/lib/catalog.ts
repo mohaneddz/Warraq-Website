@@ -39,10 +39,32 @@ const CATALOG_SELECT = `
 export const authorsOf = (book: CatalogBook) =>
   book.book_authors.map((ba) => ba.authors.name).filter(Boolean).join(", ");
 
+/** Labels for the `copy_status` enum (App/supabase/migrations/0001_extensions_enums_core.sql). */
+export const COPY_STATUS_LABEL: Record<string, string> = {
+  available: "Available",
+  "on-loan": "On loan",
+  reserved: "Reserved",
+  repair: "In repair",
+  lost: "Lost",
+  archived: "Archived",
+};
+
+/** `unavailableLabel` says why nothing is on the shelf, taken from the copies' actual
+ *  statuses: a reserved or in-repair copy is not "on loan", and saying so sends readers
+ *  to the desk asking when it will be returned. */
 export function availabilityOf(book: CatalogBook) {
   const total = book.copies.length;
   const available = book.copies.filter((c) => c.status === "available").length;
-  return { total, available };
+
+  const statuses = new Set(book.copies.map((c) => c.status));
+  let unavailableLabel = "Unavailable";
+  if (statuses.size === 1) {
+    const [status] = statuses;
+    unavailableLabel =
+      status === "on-loan" && total > 1 ? "All on loan" : (COPY_STATUS_LABEL[status] ?? status);
+  }
+
+  return { total, available, unavailableLabel };
 }
 
 export type CatalogSearchParams = {

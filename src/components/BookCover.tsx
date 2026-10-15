@@ -37,9 +37,16 @@ type Props = {
   className?: string;
 };
 
+/* Open Library cover URLs redirect to archive.org, which can take seconds on a cold
+   fetch, and Next's optimizer gives up on an upstream after 7s. Each rendered width is
+   its own optimizer cache entry, so the same cover can load on a card and time out on
+   the detail page. A failed optimized load therefore retries the original URL straight
+   from the browser, which has no such limit, before settling for the generated cover. */
+type CoverAttempt = "optimized" | "direct" | "failed";
+
 export function BookCover({ title, author, coverUrl, seed, size = "card", className = "" }: Props) {
-  const [failed, setFailed] = useState(false);
-  const showImage = coverUrl && !failed;
+  const [attempt, setAttempt] = useState<CoverAttempt>("optimized");
+  const showImage = coverUrl && attempt !== "failed";
 
   if (showImage) {
     return (
@@ -50,7 +57,9 @@ export function BookCover({ title, author, coverUrl, seed, size = "card", classN
             external round-trip, with their own short cache lifetimes, is what caused
             covers to visibly reload while browsing. */}
         <Image
+          key={attempt}
           src={coverUrl}
+          unoptimized={attempt === "direct"}
           alt={`Cover of ${title}`}
           fill
           sizes={
@@ -63,7 +72,7 @@ export function BookCover({ title, author, coverUrl, seed, size = "card", classN
           // trigger. Grid thumbnails stay lazy since dozens render per page.
           priority={size === "detail"}
           loading={size === "detail" ? undefined : "lazy"}
-          onError={() => setFailed(true)}
+          onError={() => setAttempt(attempt === "optimized" ? "direct" : "failed")}
           className="object-cover"
         />
       </div>

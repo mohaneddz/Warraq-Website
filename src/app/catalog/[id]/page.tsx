@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { BookCover } from "@/components/BookCover";
-import { authorsOf, availabilityOf, getBookById } from "@/lib/catalog";
+import { COPY_STATUS_LABEL, authorsOf, availabilityOf, getBookById } from "@/lib/catalog";
 import { externalLinksFor } from "@/lib/external";
 
 export const revalidate = 300;
@@ -14,15 +14,6 @@ const TYPE_LABEL: Record<string, string> = {
   fyp: "Final-year project (PFE)",
   journal: "Journal",
   other: "Other",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  available: "Available",
-  "on-loan": "On loan",
-  reserved: "Reserved",
-  repair: "In repair",
-  lost: "Lost",
-  archived: "Archived",
 };
 
 export async function generateMetadata({
@@ -70,7 +61,7 @@ export default async function BookDetailPage({
   if (!book) notFound();
 
   const authors = authorsOf(book);
-  const { total, available } = availabilityOf(book);
+  const { total, available, unavailableLabel } = availabilityOf(book);
   const links = externalLinksFor(book);
 
   const statusCounts = book.copies.reduce<Record<string, number>>((acc, c) => {
@@ -134,14 +125,14 @@ export default async function BookDetailPage({
                   ? "No copies on record"
                   : available > 0
                     ? `${available} of ${total} available`
-                    : "All copies on loan"}
+                    : unavailableLabel}
               </p>
 
               {total > 0 && (
                 <ul className="mt-3 space-y-1.5">
                   {Object.entries(statusCounts).map(([status, count]) => (
                     <li key={status} className="flex items-center justify-between text-[12.5px]">
-                      <span className="text-muted">{STATUS_LABEL[status] ?? status}</span>
+                      <span className="text-muted">{COPY_STATUS_LABEL[status] ?? status}</span>
                       <span className="font-semibold">{count}</span>
                     </li>
                   ))}
